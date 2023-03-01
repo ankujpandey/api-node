@@ -1,4 +1,6 @@
 const express = require("express");
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
 const app = express();
 const con = require("./dbConnect");
 const cors = require("cors");
@@ -109,6 +111,10 @@ app.delete("/:id", (req, resp) => {
 			resp.send(result);
 		}
 	);
+});
+
+app.post("/uploadImage/:id", upload.single("img"), (req, resp, next) => {
+	console.log(req.file, req.body.name);
 });
 
 app.listen(4000);
