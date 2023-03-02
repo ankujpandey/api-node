@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
+// const upload = multer({ dest: "uploads/" });
 const app = express();
 const con = require("./dbConnect");
 const cors = require("cors");
@@ -113,8 +113,20 @@ app.delete("/:id", (req, resp) => {
 	);
 });
 
-app.post("/uploadImage/:id", upload.single("img"), (req, resp, next) => {
-	console.log(req.file, req.body.name);
+const upload = multer({
+	storage: multer.diskStorage({
+		destination: function (req, file, cb) {
+			cb(null, "./uploads/");
+		},
+		filename: function (req, file, cb) {
+			cb(null, file.originalname + "-" + Date.now() + ".jpg");
+		},
+	}),
+}).single("user_file");
+
+app.post("/uploadImage/:id", upload, (req, resp) => {
+	console.log(req.file, req.body.name, req.params.id);
+	resp.send("file uploaded");
 });
 
 app.listen(4000);
