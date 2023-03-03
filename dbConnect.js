@@ -16,7 +16,7 @@ con.connect((error) => {
 });
 
 con.query("select * from person", (error, result) => {
-	console.warn("result= ", result);
+	// console.warn("result= ", result);
 });
 
 module.exports = con;

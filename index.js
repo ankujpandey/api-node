@@ -1,4 +1,9 @@
 const express = require("express");
+
+const otsu = require("otsu");
+const t = require("node-tesseract-ocr");
+const fs = require("fs");
+
 const multer = require("multer");
 // const upload = multer({ dest: "uploads/" });
 const app = express();
@@ -113,20 +118,126 @@ app.delete("/:id", (req, resp) => {
 	);
 });
 
+// -------------------------------------------
+// 	upload image
+// -------------------------------------------
+
 const upload = multer({
 	storage: multer.diskStorage({
 		destination: function (req, file, cb) {
 			cb(null, "./uploads/");
 		},
 		filename: function (req, file, cb) {
-			cb(null, file.originalname + "-" + Date.now() + ".jpg");
+			let filename = file.fieldname + "-" + Date.now() + ".jpg";
+			const callback = cb(null, filename);
+			req.body.myfilename = filename;
+
+			// console.log("call back---", filename);
 		},
 	}),
 }).single("user_file");
 
-app.post("/uploadImage/:id", upload, (req, resp) => {
-	console.log(req.file, req.body.name, req.params.id);
-	resp.send("file uploaded");
+app.post("/uploadImage/:id", upload, async (req, resp) => {
+	// console.log(req.file, req.params.id);
+	// console.log("myfilename", req.body.myfilename);
+	let aadhardetails = await readImg(req.body.myfilename); // calling tesserct here to read image.
+
+	// console.log("Result:", text);
+	resp.send(aadhardetails);
+	// console.log("print print");
 });
+
+// ------------------------------------------------
+// 	Convert image to text form
+// ------------------------------------------------
+
+function readImg(imgName) {
+	const config = {
+		lang: "eng",
+		oem: 1,
+		psm: 3,
+	};
+
+	const img = fs.readFileSync(`./uploads/${imgName}`);
+	var teseString = "nothing";
+	var array = [];
+	t.recognize(img, config)
+		.then((text) => {
+			teseString = text;
+			// console.log(teseString);
+			//conveerting string into arary and removing spaces
+			teseString = teseString.replace(/[\r]/gm, "");
+			console.log(teseString);
+
+			array = teseString.split("\n");
+			array = array.filter(function (entry) {
+				return entry.trim() != "";
+			});
+
+			console.log(array);
+
+			//-----------extracting dob from the array
+			let dobregex = /DOB/gi;
+			var finddob = "";
+			for (let i = 0; i < array.length; i++) {
+				if (array[i].match(dobregex)) {
+					finddob = array[i];
+					break;
+				}
+			}
+
+			// console.log(finddob);
+			// return;
+			let strictdobregex =
+				/^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
+			let userDob = "";
+			let e = 9;
+			let s = 0;
+			while (e < finddob.length) {
+				for (let i = s; i <= e; i++) {
+					userDob += finddob[i];
+				}
+				if (userDob.match(strictdobregex)) {
+					break;
+				}
+				userDob = "";
+				s++;
+				e++;
+			}
+			console.log(userDob);
+
+			//-------------------------extrecting gender from array.
+
+			let genderRegEx = /(m|M|male|Male|f|F|female|Female|FEMALE|MALE)$/;
+			var findGender = "";
+
+			for (let i = 0; i < array.length; i++) {
+				if (array[i].match(genderRegEx)) {
+					findGender = array[i];
+					break;
+				}
+			}
+			console.log(findGender);
+
+			let strictGenderRegExMale = /^(male|Male|MALE)$/;
+			let strictGenderRegExFemale = /^(female|Female|FEMALE)$/;
+			let userGender = "";
+
+			console.log(userGender);
+		})
+
+		.catch((error) => {
+			console.log(error.message);
+		});
+
+	// const aadharDetails = {
+	// 	name : userName;
+	// 	dob : userDob;
+	// 	aadharID : aadharNumber;
+	// 	gender : userGender;
+
+	// }
+	// return aadharDetails;
+}
 
 app.listen(4000);
