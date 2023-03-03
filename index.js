@@ -219,9 +219,39 @@ function readImg(imgName) {
 			}
 			console.log(findGender);
 
-			let strictGenderRegExMale = /^(male|Male|MALE)$/;
-			let strictGenderRegExFemale = /^(female|Female|FEMALE)$/;
+			let strictGenderRegExMale = /(male|Male|MALE)$/;
+			let strictGenderRegExFemale = /(female|Female|FEMALE)$/;
 			let userGender = "";
+
+			if (findGender.match(strictGenderRegExFemale)) {
+				let s = 0;
+				let e = 6;
+				while (e < findGender.length) {
+					for (let i = s; i <= e; i++) {
+						userGender += findGender[i];
+					}
+					if (userGender.match(strictGenderRegExFemale)) {
+						break;
+					}
+					userGender = "";
+					s++;
+					e++;
+				}
+			} else {
+				let s = 0;
+				let e = 4;
+				while (e < findGender.length) {
+					for (let i = s; i <= e; i++) {
+						userGender += findGender[i];
+					}
+					if (userGender.match(strictGenderRegExMale)) {
+						break;
+					}
+					userGender = "";
+					s++;
+					e++;
+				}
+			}
 
 			console.log(userGender);
 		})
