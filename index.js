@@ -121,53 +121,63 @@ app.delete("/:id", (req, resp) => {
 // -------------------------------------------
 // 	upload image
 // -------------------------------------------
-
+var imageFiles = [];
 const upload = multer({
 	storage: multer.diskStorage({
 		destination: function (req, file, cb) {
 			cb(null, "./uploads/");
 		},
 		filename: function (req, file, cb) {
+			// console.log("bodyyyyy===>", file);
 			let filename = file.fieldname + "-" + Date.now() + ".jpg";
 			const callback = cb(null, filename);
-			req.body.myfilename = filename;
 
+			imageFiles = [...imageFiles, filename];
+			req.body.myfilename = imageFiles;
 			// console.log("call back---", filename);
 		},
 	}),
-}).single("user_file");
+}).array("user_file", 2);
 
 app.post("/uploadImage/:id", upload, async (req, resp) => {
 	// console.log(req.file, req.params.id);
-	// console.log("myfilename", req.body.myfilename);
-	let aadhardetails = await readImg(req.body.myfilename); // calling tesserct here to read image.
+	console.log("myfilename", req.body.myfilename);
+	imageFiles = [];
+	let aadhardetails = await readImg(
+		req.body.myfilename[0],
+		req.body.myfilename[1]
+	); // calling tesserct here to read image.
 
 	// console.log("Result:", text);
 	resp.send(aadhardetails);
 	// console.log("print print");
+	// resp.send("uploaded");
 });
 
 // ------------------------------------------------
 // 	Convert image to text form
 // ------------------------------------------------
 
-function readImg(imgName) {
+async function readImg(imgName1, imgName2) {
 	const config = {
 		lang: "eng",
 		oem: 1,
 		psm: 3,
 	};
 
-	const img = fs.readFileSync(`./uploads/${imgName}`);
+	//const img = fs.readFileSync(`./uploads/${imgName2}`);
+	const img = [`./uploads/${imgName1}`, `./uploads/${imgName2}`];
+	console.log("image---------------------", img);
 	var teseString = "nothing";
 	var array = [];
 	t.recognize(img, config)
 		.then((text) => {
+			console.log(text);
 			teseString = text;
 			// console.log(teseString);
 			//conveerting string into arary and removing spaces
 			teseString = teseString.replace(/[\r]/gm, "");
-			console.log(teseString);
+			// console.log(teseString);
 
 			array = teseString.split("\n");
 			array = array.filter(function (entry) {
@@ -176,9 +186,26 @@ function readImg(imgName) {
 
 			console.log(array);
 
+			// ---------------------------------- extrecting Name from array
+
+			let nameRegEx = /[a-zA-Z]/;
+			let dateregex =
+				/^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
+
+			let findName = "";
+
+			for (let i = 0; i < array.length; i++) {
+				if (array[i].match(nameRegEx) && !array[i].match(dateregex)) {
+					findName = array[i];
+					break;
+				}
+			}
+
+			console.log(findName);
+
 			//-----------extracting dob from the array
 			let dobregex = /DOB/gi;
-			var finddob = "";
+			let finddob = "";
 			for (let i = 0; i < array.length; i++) {
 				if (array[i].match(dobregex)) {
 					finddob = array[i];
@@ -190,7 +217,7 @@ function readImg(imgName) {
 			// return;
 			let strictdobregex =
 				/^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
-			let userDob = "";
+			var userDob = "";
 			let e = 9;
 			let s = 0;
 			while (e < finddob.length) {
@@ -208,8 +235,8 @@ function readImg(imgName) {
 
 			//-------------------------extrecting gender from array.
 
-			let genderRegEx = /(m|M|male|Male|f|F|female|Female|FEMALE|MALE)$/;
-			var findGender = "";
+			let genderRegEx = /(male|Male|female|Female|FEMALE|MALE)$/;
+			let findGender = "";
 
 			for (let i = 0; i < array.length; i++) {
 				if (array[i].match(genderRegEx)) {
@@ -217,43 +244,32 @@ function readImg(imgName) {
 					break;
 				}
 			}
-			console.log(findGender);
+			// console.log(findGender);
 
-			let strictGenderRegExMale = /(male|Male|MALE)$/;
+			// let strictGenderRegExMale = /(male|Male|MALE)$/;
 			let strictGenderRegExFemale = /(female|Female|FEMALE)$/;
-			let userGender = "";
+			var userGender = "";
 
 			if (findGender.match(strictGenderRegExFemale)) {
-				let s = 0;
-				let e = 6;
-				while (e < findGender.length) {
-					for (let i = s; i <= e; i++) {
-						userGender += findGender[i];
-					}
-					if (userGender.match(strictGenderRegExFemale)) {
-						break;
-					}
-					userGender = "";
-					s++;
-					e++;
-				}
+				userGender += "FEMALE";
 			} else {
-				let s = 0;
-				let e = 4;
-				while (e < findGender.length) {
-					for (let i = s; i <= e; i++) {
-						userGender += findGender[i];
-					}
-					if (userGender.match(strictGenderRegExMale)) {
-						break;
-					}
-					userGender = "";
-					s++;
-					e++;
-				}
+				userGender += "MALE";
 			}
 
 			console.log(userGender);
+
+			// ---------------------------------- extrecting Aadhaar number from array
+			let adharRegEx = /\d{4}\s\d{4}\s\d{4}$/;
+			var findAdhar = "";
+
+			for (let i = 0; i < array.length; i++) {
+				if (array[i].match(adharRegEx)) {
+					findAdhar = array[i];
+					break;
+				}
+			}
+
+			console.log(findAdhar);
 		})
 
 		.catch((error) => {
