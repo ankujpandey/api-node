@@ -18,6 +18,7 @@
 		"face-detect": "^0.0.2",
 		"idanalyzer": "^1.2.7",
 		"jsdom": "^21.1.0",
+		"mongoose": "^7.0.1",
 		"multer": "^1.4.5-lts.1",
 		"mysql": "^2.18.1",
 		"node-tesseract-ocr": "^2.2.1",
@@ -25,6 +26,7 @@
 		"opencv-facecrop": "^0.0.5",
 		"opencv.js": "^1.2.1",
 		"opencv4js": "^3.4.3",
-		"otsu": "^0.0.5"
+		"otsu": "^0.0.5",
+		"puppeteer": "^19.7.5"
 	}
 }

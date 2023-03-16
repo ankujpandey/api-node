@@ -4,6 +4,10 @@ const coreAPI = require("./idAnalyser"); // calling id analyzer
 
 const readImg = require("./dataExtraction"); //calling tesseract file tp extract data.
 
+const person = require("./mongoConnection"); //store image in mongo.
+
+const createPDF = require("./pdf/generatePDF");
+
 const multer = require("multer");
 // const upload = multer({ dest: "uploads/" });
 const app = express();
@@ -73,13 +77,25 @@ app.get("/:id", (req, resp) => {
 	);
 });
 
+app.get("/image/:id", async (req, resp) => {
+	console.log(req.params.id);
+	let data = await person.find({ id: req.params.id });
+	console.log(data);
+	resp.send(data);
+});
+
+app.get("/createPdf/:id", async (req, resp) => {
+	await createPDF(req.params.id);
+	// console.log(req.params.id);
+});
+
 // ----------------------------------
 // Post Api
 // ----------------------------------
 
 app.post("/", (req, resp) => {
 	const data = req.body;
-	console.log(data);
+	// console.log(data);
 	con.query("INSERT INTO person SET ?", [data], (error, result, fields) => {
 		if (error) {
 			console.log(error);
@@ -151,16 +167,20 @@ app.post("/uploadImage/:id", upload, async (req, resp) => {
 	console.log("aadhhaar", aadhardetails);
 
 	console.log(req.params.id);
-	await coreAPI(
+	const analyse = await coreAPI(
 		req.body.myfilename[0],
 		req.body.myfilename[1],
 		req.body.myfilename[2],
 		req.params.id
 	);
+
+	console.log("analysis======>>>>>", analyse);
 	// console.log("Result:", text);
 	resp.send(aadhardetails);
 	// console.log("print print");
 	// resp.send("uploaded");
 });
+
+createPDF();
 
 app.listen(4000);

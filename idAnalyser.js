@@ -1,7 +1,10 @@
 const IDAnalyzer = require("idanalyzer");
 const con = require("./dbConnect");
+// const storeImage = require("./mongoConnection");
+const saveImage = require("./storeImage");
+const fs = require("fs");
 
-let CoreAPI = new IDAnalyzer.CoreAPI("F2Jvu1FNS6TY1NAcqrneiR3fvT4jPJoH", "US");
+let CoreAPI = new IDAnalyzer.CoreAPI("INELU2ibe1HozTTaMBqWsVLHvTJYlsB3", "US");
 
 // Analyze ID image by passing URL of the ID image (you may also use a local file)
 function idScan(primary_img, secondary_img, biometric_img, id) {
@@ -41,6 +44,10 @@ function idScan(primary_img, secondary_img, biometric_img, id) {
 							verification_data.result.documentNumber === false
 						) {
 							console.log("Wrong data");
+
+							fs.unlinkSync(`./uploads/${primary_img}`);
+							fs.unlinkSync(`./uploads/${secondary_img}`);
+							fs.unlinkSync(`./uploads/${biometric_img}`);
 						} else {
 							// Print result
 							console.log(`Hello your name is ${data_result["fullName"]}`);
@@ -66,6 +73,12 @@ function idScan(primary_img, secondary_img, biometric_img, id) {
 								}
 								console.log("Confidence Score: " + face_result["confidence"]);
 							}
+
+							// --------------------------------------------------
+							// Saving the data in mongo
+							// --------------------------------------------------
+
+							saveImage(id, primary_img, secondary_img, biometric_img);
 						}
 					} else {
 						// API returned an error
