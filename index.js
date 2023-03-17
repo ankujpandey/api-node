@@ -86,6 +86,7 @@ app.get("/image/:id", async (req, resp) => {
 
 app.get("/createPdf/:id", async (req, resp) => {
 	await createPDF(req.params.id);
+	resp.sendFile(`${__dirname}/pdf/result.pdf`);
 	// console.log(req.params.id);
 });
 

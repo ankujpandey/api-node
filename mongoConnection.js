@@ -7,9 +7,9 @@ mongoose
 
 const personSchema = new mongoose.Schema({
 	id: { type: Number, required: true },
-	aadhaar_front: { data: Buffer, contentType: String },
-	aadhaar_back: { data: Buffer, contentType: String },
-	profile_image: { data: Buffer, contentType: String },
+	aadhaar_front: String,
+	aadhaar_back: String,
+	profile_image: String,
 });
 
 const person = mongoose.model("person", personSchema, "person");

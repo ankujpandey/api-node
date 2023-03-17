@@ -6,18 +6,11 @@ const saveImage = async (user_id, front_id, back_id, image) => {
 	if ((await person.find({ id: user_id })).length == 0) {
 		let data = new person({
 			id: user_id,
-			aadhaar_front: {
-				data: fs.readFileSync(`./uploads/${front_id}`),
-				contentType: "image/jpg ",
-			},
-			aadhaar_back: {
-				data: fs.readFileSync(`./uploads/${back_id}`),
-				contentType: "image/jpg ",
-			},
-			profile_image: {
-				data: fs.readFileSync(`./uploads/${image}`),
-				contentType: "image/jpg ",
-			},
+			aadhaar_front: fs
+				.readFileSync(`./uploads/${front_id}`)
+				.toString("base64"),
+			aadhaar_back: fs.readFileSync(`./uploads/${back_id}`).toString("base64"),
+			profile_image: fs.readFileSync(`./uploads/${image}`).toString("base64"),
 		});
 
 		const result = await data.save();
@@ -27,18 +20,15 @@ const saveImage = async (user_id, front_id, back_id, image) => {
 			{ id: user_id },
 			{
 				$set: {
-					aadhaar_front: {
-						data: fs.readFileSync(`./uploads/${front_id}`),
-						contentType: "image/jpg ",
-					},
-					aadhaar_back: {
-						data: fs.readFileSync(`./uploads/${back_id}`),
-						contentType: "image/jpg ",
-					},
-					profile_image: {
-						data: fs.readFileSync(`./uploads/${image}`),
-						contentType: "image/jpg ",
-					},
+					aadhaar_front: fs
+						.readFileSync(`./uploads/${front_id}`)
+						.toString("base64"),
+					aadhaar_back: fs
+						.readFileSync(`./uploads/${back_id}`)
+						.toString("base64"),
+					profile_image: fs
+						.readFileSync(`./uploads/${image}`)
+						.toString("base64"),
 				},
 			}
 		);
